@@ -1,0 +1,56 @@
+library(plyr) 
+library(dplyr) 
+library(tidyr) 
+install.packages("data.table")
+library(data.table)
+setwd("/Users/mridulgarg11/Documents/directory/Getting and Cleaning Data")
+path=getwd()
+path
+url="https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+file="Data.zip"
+download.file(url,file.path(path,file))
+unzip("Data.zip",list=T)
+SubjectTrain=read.table(unzip("Data.zip",files="UCI HAR Dataset/train/subject_train.txt"))
+SubjectTest=read.table(unzip("Data.zip",files="UCI HAR Dataset/test/subject_test.txt"))
+ActivityTrain=read.table(unzip("Data.zip",files="UCI HAR Dataset/train/y_train.txt"))
+ActivityTest=read.table(unzip("Data.zip",files="UCI HAR Dataset/test/y_test.txt"))
+DataTrain=read.table(unzip("Data.zip",files = "UCI HAR Dataset/train/X_train.txt"))
+DataTrain=read.table(unzip("Data.zip",files = "UCI HAR Dataset/train/X_train.txt"))
+DataTest=read.table(unzip("Data.zip",files = "UCI HAR Dataset/test/X_test.txt"))
+Subject=rbind(SubjectTrain,SubjectTest)
+setnames(Subject,"V1","subject")
+Activity=rbind(ActivityTrain,ActivityTest)
+setnames(Activity,"V1","ActivityNum")
+Data=rbind(DataTrain,DataTest)
+Subject=cbind(Subject,Activity)
+Data=cbind(Subject,Data)
+Data=arrange(Data,subject,ActivityNum)
+## Q2
+Features=read.table(unzip("Data.zip",files = "UCI HAR Dataset/features.txt"))
+setnames(Features,names(Features),c("S.No","Name"))
+Features_subset=filter(Features,grepl("mean\\(\\)|std",Name))
+head(Features_subset,n=5)
+Features_subset=mutate(Features_subset,Code=paste0("V",S.No))
+Features_subset$Code
+setkey(as.data.table(Data),subject,ActivityNum)
+n=c(key(Data),Features_subset$Code)
+Data_mean_std=Data[,n]
+## Q3
+ActivityNames=read.table(unzip("Data.zip",files = "UCI HAR Dataset/activity_labels.txt"))
+setnames(ActivityNames,names(ActivityNames),c("ActivityNum","Activity"))
+Data_merged=merge(Data,ActivityNames,by="ActivityNum",all.x = T)
+Data_melt=data.table(melt(Data_merged,id=c("subject","ActivityNum","Activity"),variable.name = "Code"))
+setnames(Data_melt,"variable","Code")
+Features=mutate(Features,Code=paste0("V",S.No))
+TidyData=merge(Data_melt,Features,by="Code",all.x = T) 
+head(TidyData,n=5) 
+setnames(TidyData,"Name","Activity_Detail") 
+TidyData=select(TidyData,-c(S.No,Code,ActivityNum))
+## Q5
+Subset_Data=TidyData %>% group_by(subject,Activity,Activity_Detail) %>% summarize(mean(value)) %>% arrange(subject)
+head(Subset_Data,n=5)
+## Making codebook
+
+dest=file.path(path,"TidyData.csv")
+write.csv(TidyData,dest)
+write.table(TidyData,dest, sep="\t")
