@@ -1,5 +1,5 @@
 Code Book
-This code book summarizes the resulting data fields in TidyData.txt.
+This code book summarizes the resulting data fields in TidyData.txt. The Data Frame presented has a tall and narrow format and satsifies all conditions of a Tidy Data Set.
 
 ## Identifiers
 
