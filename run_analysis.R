@@ -4,12 +4,16 @@ library(dplyr)
 library(tidyr) 
 install.packages("data.table")
 library(data.table)
-setwd("/Users/mridulgarg11/Documents/directory/Getting and Cleaning Data")
+
+%% setting up the working directory %%
+setwd("% enter working directory here% ") 
 path=getwd()
+
 ## downloading data zip file
 url="https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
 file="Data.zip"
 download.file(url,file.path(path,file))
+
 ## listing all files in the zip folder
 unzip("Data.zip",list=T)
 ## Manipulating Data to merge training and test sets 
@@ -28,6 +32,8 @@ Subject=cbind(Subject,Activity)
 Data=cbind(Subject,Data)
 Data=arrange(Data,subject,ActivityNum)
 View(Data)
+
+
 ## Extracting mean and std dev for measurements 
 Features=read.table(unzip("Data.zip",files = "UCI HAR Dataset/features.txt"))
 setnames(Features,names(Features),c("S.No","Name"))
@@ -39,6 +45,8 @@ setkey(as.data.table(Data),subject,ActivityNum)
 n=c(key(Data),Features_subset$Code)
 Data_mean_std=Data[,n]
 head(Data_mean_std,n=4)
+
+
 ## Using descriptive activity names and labeling data set with descritive variable names
 ActivityNames=read.table(unzip("Data.zip",files = "UCI HAR Dataset/activity_labels.txt"))
 setnames(ActivityNames,names(ActivityNames),c("ActivityNum","Activity"))
@@ -50,9 +58,13 @@ TidyData=merge(Data_melt,Features,by="Code",all.x = T)
 setnames(TidyData,"Name","Activity_Detail") 
 TidyData=select(TidyData,-c(S.No,Code,ActivityNum))
 head(TidyData,n=4)
+
+
 ## Manipulating TidyData to create second data set
 Subset_Data=TidyData %>% group_by(subject,Activity,Activity_Detail) %>% summarize(mean(value)) %>% arrange(subject)
 head(Subset_Data,n=5)
+
+
 ## Producing output
 dest=file.path(path,"TidyData.txt")
 write.table(TidyData,dest, sep="\t")
